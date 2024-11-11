@@ -1,3 +1,6 @@
+import 'dart:collection';
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -37,8 +40,20 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppState extends ChangeNotifier {
-  final collections = [1, 2, 3];
+class CollectionModel extends ChangeNotifier {
+  final List<String> _collections = ['Hoge', 'Boo', 'Booyah'];
+  UnmodifiableListView<String> get collections =>
+      UnmodifiableListView(_collections);
+
+  void add(String str) {
+    _collections.add(str);
+    notifyListeners();
+  }
+
+  void removeAll() {
+    _collections.clear();
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatelessWidget {
@@ -46,18 +61,30 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<MyAppState>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Collections'),
-      ),
-      body: Column(
-        children: [
-          const Text('Collections'),
-          for (var i in appState.collections) Text(i.toString())
-        ],
-      ),
+    return ChangeNotifierProvider(
+      create: (context) => CollectionModel(),
+      child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Collections'),
+          ),
+          body: Center(
+            child: Consumer<CollectionModel>(
+              builder: (context, value, child) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    for (var i in value.collections) Text(i),
+                    ElevatedButton(
+                        onPressed: () {
+                          Provider.of<CollectionModel>(context, listen: false)
+                              .add('Its a new word');
+                        },
+                        child: const Text('add'))
+                  ],
+                );
+              },
+            ),
+          )),
     );
   }
 }
